@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/RK7Debug.iml" filepath="$PROJECT_DIR$/.idea/RK7Debug.iml" />
+      <module fileurl="file://$PROJECT_DIR$/trunk/tetris.iml" filepath="$PROJECT_DIR$/trunk/tetris.iml" />
+    </modules>
+  </component>
+</project>

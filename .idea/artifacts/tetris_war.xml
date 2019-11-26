@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="tetris:war">
+    <output-path>$PROJECT_DIR$/trunk/target</output-path>
+    <properties id="maven-jee-properties">
+      <options>
+        <module>tetris</module>
+        <packaging>war</packaging>
+      </options>
+    </properties>
+    <root id="archive" name="tetris-2.0-SNAPSHOT.war">
+      <element id="artifact" artifact-name="tetris:war exploded" />
+    </root>
+  </artifact>
+</component>
