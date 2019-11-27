@@ -3,10 +3,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.vaadin</groupId>
-    <artifactId>tetris</artifactId>
+    <artifactId>RK7Debug</artifactId>
     <packaging>war</packaging>
     <version>2.0-SNAPSHOT</version>
-    <name>Tetris with Vaadin, Canvas and WebSockets</name>
+    <name>Debugging RK 7 tests</name>
 
     <properties>
         <vaadin.version>8.0.5</vaadin.version>

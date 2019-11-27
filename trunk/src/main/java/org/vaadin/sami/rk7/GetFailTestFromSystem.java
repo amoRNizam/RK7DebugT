@@ -1,15 +1,12 @@
 package org.vaadin.sami.rk7;
 
-import com.sun.org.apache.xerces.internal.xs.StringList;
-import com.vaadin.server.VaadinService;
 import org.apache.commons.io.FileUtils;
-import org.vaadin.sami.javaday.TetrisUI;
 
 import javax.swing.*;
 import java.io.File;
 import java.util.*;
 
-import static org.vaadin.sami.javaday.TetrisUI.*;
+import static org.vaadin.sami.javaday.DebugUI.*;
 import static org.vaadin.sami.rk7.Config.*;
 
 public class GetFailTestFromSystem {

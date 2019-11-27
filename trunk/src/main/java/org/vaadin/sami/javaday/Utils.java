@@ -1,8 +1,9 @@
-package org.vaadin.sami.rk7;
+package org.vaadin.sami.javaday;
 
 import com.vaadin.server.FileResource;
 import com.vaadin.server.Resource;
-import org.vaadin.sami.javaday.TetrisUI;
+import org.vaadin.sami.javaday.DebugUI;
+import org.vaadin.sami.rk7.Config;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -10,7 +11,7 @@ import java.io.*;
 import java.nio.channels.FileChannel;
 import java.util.*;
 
-import static org.vaadin.sami.javaday.TetrisUI.*;
+import static org.vaadin.sami.javaday.DebugUI.*;
 import static org.vaadin.sami.rk7.Config.PATH_PROJECT;
 
 public class Utils {
@@ -37,7 +38,7 @@ public class Utils {
      */
     public static void reReference() throws IOException {
 
-        for (Map.Entry<String, String> img : TetrisUI.ERROR_DIFF_IMG.entrySet()) {
+        for (Map.Entry<String, String> img : DebugUI.ERROR_DIFF_IMG.entrySet()) {
 
             String erImg = img.getValue().substring(img.getValue().lastIndexOf("\\") + 1).trim();
             // Эталон в проекте (что заменяем)

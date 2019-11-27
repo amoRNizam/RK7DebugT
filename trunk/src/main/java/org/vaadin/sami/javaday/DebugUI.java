@@ -22,29 +22,26 @@ import com.vaadin.annotations.VaadinServletConfiguration;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.Notification.Type;
 
-import javax.imageio.ImageIO;
 import javax.servlet.annotation.WebServlet;
 import javax.swing.filechooser.FileSystemView;
 
 import org.vaadin.viritin.button.PrimaryButton;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 import static org.vaadin.sami.rk7.GetFailTestFromSystem.showChildrenRes;
-import static org.vaadin.sami.rk7.Utils.deleteAllFilesFolder;
-import static org.vaadin.sami.rk7.Utils.getResForImageViewer;
+import static org.vaadin.sami.javaday.Utils.deleteAllFilesFolder;
+import static org.vaadin.sami.javaday.Utils.getResForImageViewer;
 
 @Push
 @Theme("valo")
 @Title("RK 7 Debug")
-public class TetrisUI extends UI {
+public class DebugUI extends UI {
 
     @WebServlet(value = {"/*"}, asyncSupported = true)
-    @VaadinServletConfiguration(productionMode = false, ui = TetrisUI.class, resourceCacheTime = 0)
+    @VaadinServletConfiguration(productionMode = false, ui = DebugUI.class, resourceCacheTime = 0)
     public static class Servlet extends VaadinServlet {
     }
 
@@ -134,8 +131,6 @@ public class TetrisUI extends UI {
 //        layout.setComponentAlignment(GPanel, Alignment.BOTTOM_RIGHT);
 
         //*********************ИЗОБРАЖЕНИЯ ******************************
-//        Label info = new Label();
-
         // Просмотрщик изображений
         imageViewer = new ImageViewer();
         imageViewer.setWidth("920");
@@ -149,6 +144,13 @@ public class TetrisUI extends UI {
         imageViewer.addListener((ImageViewer.ImageSelectionListener) e -> {
             selectedImage.setValue(e.getSelectedImageIndex() >= 0 ? String.valueOf(e.getSelectedImageIndex()) : "-");
         });
+
+        Label info = new Label("<div style = 'margin: -45px 0px 45px 100px;'><i>*от&nbsp;</i>"
+                        + "<b>difference_scr</b>"
+                        + "&nbsp;<u>слева эталон</u> с проекта, а <u>справа скрин</u> с кассы.</div>",
+                ContentMode.HTML);
+        info.setVisible(false);
+//        info.setValue("* слева от difference_scr находится эталон с проекта, а справа скрин с кассы");
 
 //        HorizontalLayout hl = new HorizontalLayout();
 //        hl.setSizeUndefined();
@@ -238,20 +240,13 @@ public class TetrisUI extends UI {
             }catch (Exception e) {
                 Notification.show("Произошла ошибка! \n" +e, Type.ERROR_MESSAGE);
             }
-
+            info.setVisible(true);
         });
 
         Button btnChooseResultDir = new Button("ЗАМЕНИТЬ");
         btnChooseResultDir.setStyleName(ValoTheme.BUTTON_DANGER);
         btnChooseResultDir.addClickListener(event -> {
-//            Notification.show("The button was clicked", Type.TRAY_NOTIFICATION);
-//            image.setSource(res2);
-//            System.out.println("OPEN IMG " + difImg.get(SELECTED_ER_T_IN_ALL.trim()));
-//            selectDeffImg = new FileResource(
-//                    new File(difImg.get(SELECTED_ER_T_IN_ALL.trim())));
-//            Resource res1 = new FileResource(
-//                    new File("D:\\PROJECT\\GeneralProjects\\RK7Debug\\trunk\\src\\main\\resources\\cat-1.jpg"));
-//            image.setSource(res1);
+            // Здесь будет действие замены скринов
         });
 
         Button btnAdd = new Button(">");
@@ -316,6 +311,8 @@ public class TetrisUI extends UI {
         GPanel.addComponent(imageViewer);
         GPanel.setExpandRatio(imageViewer, 1);
         GPanel.setComponentAlignment(imageViewer, Alignment.BOTTOM_RIGHT);
+        layout.addComponent(info);
+        layout.setComponentAlignment(info, Alignment.BOTTOM_CENTER);
         layout.addComponent(ctrls);
         layout.setComponentAlignment(ctrls, Alignment.BOTTOM_CENTER);
 

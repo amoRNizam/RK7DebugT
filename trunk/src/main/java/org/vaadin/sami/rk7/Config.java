@@ -1,5 +1,7 @@
 package org.vaadin.sami.rk7;
 
+import org.vaadin.sami.javaday.Utils;
+
 public class Config {
     public static String PREFIX_ERROR_IMG;
     public static String PREFIX_TEMPLATE_IMG;
