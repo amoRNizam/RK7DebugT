@@ -30,10 +30,11 @@ import org.vaadin.viritin.layouts.MHorizontalLayout;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import static org.vaadin.sami.javaday.Utils.*;
 import static org.vaadin.sami.rk7.GetFailTestFromSystem.showChildrenRes;
-import static org.vaadin.sami.javaday.Utils.deleteAllFilesFolder;
-import static org.vaadin.sami.javaday.Utils.getResForImageViewer;
 
 @Push
 @Theme("valo")
@@ -78,10 +79,12 @@ public class DebugUI extends UI {
     public static Map<String, String> ERROR_TEST = new HashMap<>();
     public static Map<String, Map<Integer, String>> ALL_IMG_IN_FAIL_TEST = new HashMap<>();
     public static Set<String> eList = new LinkedHashSet<>();
+    public static Set<String> LIST_RESULT_DIR = new LinkedHashSet<>();
 
     public static TextField pathProject;
     private static ImageViewer imageViewer;
     private TextField selectedImage = new TextField();
+    public static NativeSelect inputDirResult;
 
     public static String SELECTED_ER_T_IN_ALL;
     public static String SELECTED_ER_T_IN_SEL;
@@ -277,6 +280,18 @@ public class DebugUI extends UI {
 //        pathProject.setPlaceholder("Укажите путь к папке 'input' в проекте");
 //        pathProject.setWidth("350");
 //        pathProject.setMaxLength(15);
+        List<String> data = IntStream.range(0, 6).mapToObj(i -> "Option " + i).collect(Collectors.toList());
+        inputDirResult = new NativeSelect<>();
+//        inputDirResult.setData(getResultDir());
+        //https://javadevblog.com/java-filenamefilter-primer-spiska-fajlov-s-opredelenny-m-rasshireniem.html ЗДЕСЬ ПОСМОТРЕТЬ РЕАЛИЗАЦИЮ.
+
+        inputDirResult.setEmptySelectionAllowed(false);
+        inputDirResult.setSelectedItem(data.get(2));
+        inputDirResult.addValueChangeListener(event -> Notification.show("Value changed:",
+                String.valueOf(event.getValue()),
+                Type.TRAY_NOTIFICATION));
+
+
 
         /// ПОСТРОЕНИЕ ИНТЕРФЕЙСА (РАСПОЛОЖЕНИЕ ЭЕЛЕМЕНТОВ)
 
@@ -286,7 +301,7 @@ public class DebugUI extends UI {
         settingsPanel.addComponent(btnUploadFTest); // кнопка Загрузить fail-тесты
         settingsPanel.setComponentAlignment(btnUploadFTest, Alignment.BOTTOM_LEFT);
 
-//        settingsPanel.addComponent(resultDirPath);
+        settingsPanel.addComponent(inputDirResult);
 
         GPanel.addComponent(listAllFailTest);
         GPanel.setComponentAlignment(listAllFailTest, Alignment.BOTTOM_LEFT);

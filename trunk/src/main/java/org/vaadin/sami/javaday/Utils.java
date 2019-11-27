@@ -2,7 +2,7 @@ package org.vaadin.sami.javaday;
 
 import com.vaadin.server.FileResource;
 import com.vaadin.server.Resource;
-import org.vaadin.sami.javaday.DebugUI;
+import org.apache.commons.io.FileUtils;
 import org.vaadin.sami.rk7.Config;
 
 import javax.imageio.ImageIO;
@@ -12,7 +12,7 @@ import java.nio.channels.FileChannel;
 import java.util.*;
 
 import static org.vaadin.sami.javaday.DebugUI.*;
-import static org.vaadin.sami.rk7.Config.PATH_PROJECT;
+import static org.vaadin.sami.rk7.Config.*;
 
 public class Utils {
 
@@ -141,5 +141,43 @@ public class Utils {
         img.add(res_2);
 
         return img;
+    }
+
+    public static Set<String> getResultDir() {
+        LIST_RESULT_DIR.clear();
+        System.out.println(PATH_RESULT);
+        File file = new File(PATH_RESULT);
+        File root = file;
+        System.out.println(file.getAbsolutePath());
+        try {
+            boolean recursive = true;
+
+            if (file.isDirectory()) {
+                System.out.println("1*******");
+                Collection files = FileUtils.listFiles(root, null, recursive);
+                for (Iterator iterator = files.iterator(); iterator.hasNext(); ) {
+                    System.out.println("2*******");
+                    File dirResult = (File) iterator.next();
+                    if (dirResult.getName().contains(PREFIX_RESULT_DIR)) {
+                        System.out.println("3*******");
+                        System.out.println(dirResult);
+                        LIST_RESULT_DIR.add(dirResult.getName());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+//        for (String img :
+//                difImg) {
+//            System.out.println(img);
+//        }
+//        for (Map.Entry<String, Map<Integer, String>> img : ALL_IMG_IN_FAIL_TEST.entrySet()) {
+//            System.out.println("Тест: " + img.getKey() + "\n" +
+//                    "Различие: " + img.getValue().get(1) + "\n" +
+//                    "Скрин кассы: " + img.getValue().get(2) + "\n" +
+//                    "Эталон: " + img.getValue().get(3)) ;
+//        }
+        return LIST_RESULT_DIR;
     }
 }
