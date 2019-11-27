@@ -1,12 +1,12 @@
 package org.vaadin.sami.javaday;
 
-import com.vaadin.event.ShortcutAction;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.*;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TextField;
+import com.vaadin.ui.themes.ValoTheme;
 import org.tepi.imageviewer.ImageViewer;
 import org.vaadin.hezamu.canvas.Canvas;
 import org.vaadin.sami.rk7.Config;
@@ -28,22 +28,19 @@ import javax.swing.filechooser.FileSystemView;
 
 import org.vaadin.viritin.button.PrimaryButton;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
-import com.vaadin.ui.Label;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import static org.vaadin.sami.rk7.GetFailTestFromSystem.showChildrenRes;
 import static org.vaadin.sami.rk7.Utils.deleteAllFilesFolder;
+import static org.vaadin.sami.rk7.Utils.getResForImageViewer;
 
 @Push
 @Theme("valo")
-@Title("Vaadin Tetris")
+@Title("RK 7 Debug")
 public class TetrisUI extends UI {
 
     @WebServlet(value = {"/*"}, asyncSupported = true)
@@ -82,6 +79,8 @@ public class TetrisUI extends UI {
     public static Map<String, String> difImg = new HashMap<>();
     public static Map<String, String> ERROR_DIFF_IMG = new HashMap<>();
     public static Map<String, String> ERROR_TEST = new HashMap<>();
+    public static Map<String, Map<Integer, String>> ALL_IMG_IN_FAIL_TEST = new HashMap<>();
+    public static Set<String> eList = new LinkedHashSet<>();
 
     public static TextField pathProject;
     private static ImageViewer imageViewer;
@@ -104,47 +103,44 @@ public class TetrisUI extends UI {
         new Config();
 
         layout = new VerticalLayout();
-//        layout.setSizeFull();
         layout.setSizeUndefined();
         layout.setSpacing(true);
         layout.setMargin(true);
         setContent(layout);
 
-        layout.addComponent(new About());
+        layout.addComponent(new About()); // о программе
 
         //*** RK7 *****************************************************************
-        //--- РАСПОЛОЖЕНИЕ (горизонтальная панель)
-        VerticalLayout btnPanelListT = new VerticalLayout();
-        btnPanelListT.addStyleName("outlined");
-        btnPanelListT.setSpacing(false);
-        btnPanelListT.setMargin(false);
-//        btnPanelListT.setSizeFull();
+        //--- РАСПОЛОЖЕНИЕ (панель кнопок главной таблицы)
+        VerticalLayout btnGTable = new VerticalLayout();
+        btnGTable.addStyleName("outlined");
+        btnGTable.setSpacing(false);
+        btnGTable.setMargin(false);
+//        btnGTable.setSizeFull();
 
-        //--- РАСПОЛОЖЕНИЕ (горизонтальная панель)
+        //--- РАСПОЛОЖЕНИЕ (панель настроек)
         HorizontalLayout settingsPanel = new HorizontalLayout();
         settingsPanel.addStyleName("outlined");
-        settingsPanel.setSpacing(false);
+        settingsPanel.setSpacing(true);
         settingsPanel.setMargin(false);
 //        settingsPanel.setSizeFull();
 
         //--- РАСПОЛОЖЕНИЕ (вертикальная панель)
-        HorizontalLayout generalPanel = new HorizontalLayout();
-        generalPanel.setMargin(true);
-        generalPanel.setSpacing(true);
-        generalPanel.addStyleName("outlined");
-        generalPanel.setHeight(100.0f, Unit.PERCENTAGE);
-//        layout.setComponentAlignment(generalPanel, Alignment.BOTTOM_RIGHT);
+        HorizontalLayout GPanel = new HorizontalLayout();
+        GPanel.setMargin(true);
+        GPanel.setSpacing(true);
+        GPanel.addStyleName("outlined");
+        GPanel.setHeight(100.0f, Unit.PERCENTAGE);
+//        layout.setComponentAlignment(GPanel, Alignment.BOTTOM_RIGHT);
 
         //*********************ИЗОБРАЖЕНИЯ ******************************
-//        Label info = new Label(
-//                "<b>ImageViewer Demo Application</b>&nbsp;&nbsp;&nbsp;"
-//                        + "<i>Try the arrow keys, space/enter and home/end."
-//                        + " You can also click on the pictures or use the " + "mouse wheel.&nbsp;&nbsp;",
-//                ContentMode.HTML);
+//        Label info = new Label();
 
+        // Просмотрщик изображений
         imageViewer = new ImageViewer();
-        imageViewer.setWidth("400");
-        imageViewer.setHeight("500");
+        imageViewer.setWidth("920");
+        imageViewer.setHeight("530");
+
 //        imageViewer.setSizeFull();
         imageViewer.setImages(createImageList());
         imageViewer.setAnimationEnabled(false);
@@ -153,99 +149,63 @@ public class TetrisUI extends UI {
         imageViewer.addListener((ImageViewer.ImageSelectionListener) e -> {
             selectedImage.setValue(e.getSelectedImageIndex() >= 0 ? String.valueOf(e.getSelectedImageIndex()) : "-");
         });
-        HorizontalLayout hl = new HorizontalLayout();
-        hl.setSizeUndefined();
-        hl.setMargin(false);
-        hl.setSpacing(true);
+
+//        HorizontalLayout hl = new HorizontalLayout();
+//        hl.setSizeUndefined();
+//        hl.setMargin(false);
+//        hl.setSpacing(true);
 //        hl.addComponent(info);
-//        generalPanel.addComponent(hl);
-//        generalPanel.addComponent(imageViewer);
-//        generalPanel.setExpandRatio(imageViewer, 1);
-//        generalPanel.setComponentAlignment(imageViewer, Alignment.BOTTOM_RIGHT);
+//        GPanel.addComponent(hl);
+//        GPanel.addComponent(imageViewer);
+//        GPanel.setExpandRatio(imageViewer, 1);
+//        GPanel.setComponentAlignment(imageViewer, Alignment.BOTTOM_RIGHT);
 //        layout.addComponent(hl);
 //        layout.addComponent(imageViewer);
 //        layout.setExpandRatio(imageViewer, 1);
 //
+        // Панель управления для просмотрщика
         Layout ctrls = createControls();
 //        layout.addComponent(ctrls);
 //        layout.setComponentAlignment(ctrls, Alignment.BOTTOM_CENTER);
 
-//        Label images = new Label("Sample Photos: Bruno Monginoux / www.Landscape-Photo.net (cc-by-nc-nd)");
+//        Label images = new Label("");
 //        images.setSizeUndefined();
 //        images.setStyleName("licence");
 //        layout.addComponent(images);
 //        layout.setComponentAlignment(images, Alignment.BOTTOM_RIGHT);
 
         setContent(layout);
-        imageViewer.setCenterImageIndex(0);
+        try {
+            imageViewer.setCenterImageIndex(0);
+        }catch (Exception ignored) {}
         imageViewer.focus();
 
-        // Serve the image from the theme
-//        Resource res = new FileResource(
-//                new File(basepath + "\\WEB-INF\\images\\difference_scr1.png"));
-//        Resource res2 = new FileResource(
-//                new File("D:\\TestingResult_19.11.2019_01.03.56\\50805\\Screens\\difference_scr1.png"));
-//
-//        // Display the image without caption
-//        Image image = new Image();
-//        image.setHeight("500");
-//        image.setWidth("600");
-//        image.setSource(res);
+//        GPanel.addComponent(image);
+//        GPanel.setComponentAlignment(image, Alignment.BOTTOM_RIGHT);
 
-//        generalPanel.addComponent(image);
-//        generalPanel.setComponentAlignment(image, Alignment.BOTTOM_RIGHT);
-
-        //********* ЗДЕСЬ БУДЕТ ВЫГРУЗКА ПАПОК В СПИСОК *****************
+        // Левая таблица павших тестов (все павшие тесты)
         ListSelect listAllFailTest = new ListSelect<>("Все упавшие тесты");
         listAllFailTest.setRows(6);
 //        listAllFailTest.setWidth(100.0f, Unit.PERCENTAGE);
         listAllFailTest.setWidth("170");
         listAllFailTest.setHeight("525");
-//        generalPanel.addComponent(listAllFailTest);
-//        generalPanel.setComponentAlignment(listAllFailTest, Alignment.BOTTOM_LEFT);
-
-        Set<String> eList = new LinkedHashSet<>();
 
         listAllFailTest.addValueChangeListener(event -> {
-                SELECTED_ER_T_IN_ALL = event.getValue().toString()
-                 .replace("[","").replace("]","");
-            System.out.println("|" + SELECTED_ER_T_IN_ALL + "|");
-            System.out.println(difImg.get(SELECTED_ER_T_IN_ALL.trim()));
+            SELECTED_ER_T_IN_ALL = event.getValue().toString()
+                    .replace("[","").replace("]","");
 
-            selectDeffImg = new FileResource(
-                    new File(difImg.get(SELECTED_ER_T_IN_ALL.trim())));
-            List<Resource> img = new ArrayList<Resource>();
-//            img.add(selectDeffImg);
-
-//            imageViewer.setImages(img);
-//            imageViewer.focus();
-            try {
-                deleteAllFilesFolder(basepath + "/WEB-INF/images/view"); //очистим папку с изображениями
-                BufferedImage bufferedImage = ImageIO.read(new File(difImg.get(SELECTED_ER_T_IN_ALL.trim())));
-                //сохранение на сервере
-                ImageIO.write(bufferedImage, "png",
-                        new File(basepath + "/WEB-INF/images/view/" + SELECTED_ER_T_IN_ALL + ".png"));
-                String filePath = basepath + "/WEB-INF/images/view/" + SELECTED_ER_T_IN_ALL + ".png";
-                Resource resource = new FileResource(
-                        new File(filePath));
-                img.add(resource);
-                imageViewer.setImages(img);
-                imageViewer.focus();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-//            //сохранение на сервере
-//            ImageIO.write(, "png",
-//                    new File(basepath + "Images/" + SELECTED_ER_T_IN_ALL + ".png"));
-//            image.setSource(selectDeffImg);
+            selectDeffImg = new FileResource(new File(difImg.get(SELECTED_ER_T_IN_ALL.trim())));
+            deleteAllFilesFolder(basepath + "/WEB-INF/images/view"); //очистим папку с изображениями
+            imageViewer.setImages(getResForImageViewer());
+            imageViewer.focus();
         });
 
         ListSelect listSelectFailTest = new ListSelect<>("Выбранные для отладки");
         listAllFailTest.setRows(6);
         listSelectFailTest.setWidth("170");
         listSelectFailTest.setHeight("525");
-        generalPanel.addComponent(listSelectFailTest);
-        generalPanel.setComponentAlignment(listSelectFailTest, Alignment.BOTTOM_RIGHT);
+//        GPanel.addComponent(listSelectFailTest);
+//        GPanel.setComponentAlignment(listSelectFailTest, Alignment.BOTTOM_RIGHT);
         //--------------------------------------------
         listSelectFailTest.addValueChangeListener(event -> {
             SELECTED_ER_T_IN_SEL = event.getValue().toString()
@@ -255,44 +215,24 @@ public class TetrisUI extends UI {
         fileSystemView = FileSystemView.getFileSystemView();
 
         TwinColSelect<String> listFailTest = new TwinColSelect<>();
-        listFailTest.setWidth("325");
+        listFailTest.setWidth("170");
         listFailTest.setHeight("525");
-        showChildrenRes("D:\\TestingResult_19.11.2019_01.03.56");
+//        showChildrenRes("D:\\TestingResult_19.11.2019_01.03.56");
         listFailTest.setRightColumnCaption("Для отладки");
         listFailTest.setLeftColumnCaption("Все упавшие тесты");
-
-        // Handle value changes
-        listFailTest.addSelectionListener(event -> {
-                layout.addComponent(
-                        new Label("Selected: " + event.getNewSelection()));
-        });
-
-
-//        generalPanel.addComponent(listFailTest);
-//        generalPanel.setComponentAlignment(listFailTest, Alignment.BOTTOM_LEFT);
-//
-//        generalPanel.addComponent(image);
-//        generalPanel.setComponentAlignment(image, Alignment.BOTTOM_RIGHT);
-
 
         // КНОПКИ
         Button btnUploadFTest = new Button("Загрузить fail-тесты");
         btnUploadFTest.addClickListener(event -> {
-//            System.out.println("123");
+            listAllFailTest.clear();
             showChildrenRes("D:\\TestingResult_19.11.2019_01.03.56");
             // запоним список fail-тетсов
             ArrayList<String> s = new ArrayList<>();
 
-//            Resource res3 = new FileResource(
-//                    new File("D:\\PROJECT\\GeneralProjects\\RK7Debug\\trunk\\src\\main\\resources\\cat-1-bw.jpg"));
-//            image.setSource(res3);
-//            listFile.forEach(x -> s.add(x.getName()));
-//            listFailTest.setItems(s);
             try {
                 for (Map.Entry<String, String> fTest : ERROR_TEST.entrySet()) {
                     s.add(fTest.getKey());
                 }
-//                listFailTest.setItems(s);
                 listAllFailTest.setItems(s);
                 Notification.show("Загрузка успешно завершена!", Type.TRAY_NOTIFICATION);
             }catch (Exception e) {
@@ -301,9 +241,10 @@ public class TetrisUI extends UI {
 
         });
 
-        Button btnChooseResultDir = new Button("выбрать");
+        Button btnChooseResultDir = new Button("ЗАМЕНИТЬ");
+        btnChooseResultDir.setStyleName(ValoTheme.BUTTON_DANGER);
         btnChooseResultDir.addClickListener(event -> {
-            Notification.show("The button was clicked", Type.TRAY_NOTIFICATION);
+//            Notification.show("The button was clicked", Type.TRAY_NOTIFICATION);
 //            image.setSource(res2);
 //            System.out.println("OPEN IMG " + difImg.get(SELECTED_ER_T_IN_ALL.trim()));
 //            selectDeffImg = new FileResource(
@@ -329,62 +270,61 @@ public class TetrisUI extends UI {
             eList.remove(SELECTED_ER_T_IN_SEL);
             listSelectFailTest.setItems(eList);
         });
-        //-##########################################################################
-
 
         //-##########################################################################
 
         // ПОЛЯ
-        resultDirPath = new TextField();
-        resultDirPath.setPlaceholder("Write something");
+//        resultDirPath = new TextField();
+//        resultDirPath.setPlaceholder("Write something");
 //        resultDirPath.setMaxLength(10);
 
-        pathProject = new TextField();
-        pathProject.setPlaceholder("Укажите путь к папке 'input' в проекте");
-        pathProject.setWidth("350");
+//        pathProject = new TextField();
+//        pathProject.setPlaceholder("Укажите путь к папке 'input' в проекте");
+//        pathProject.setWidth("350");
 //        pathProject.setMaxLength(15);
 
         /// ПОСТРОЕНИЕ ИНТЕРФЕЙСА (РАСПОЛОЖЕНИЕ ЭЕЛЕМЕНТОВ)
 
         layout.addComponent(settingsPanel);
-        layout.addComponent(generalPanel);
+        layout.addComponent(GPanel);
 
         settingsPanel.addComponent(btnUploadFTest); // кнопка Загрузить fail-тесты
         settingsPanel.setComponentAlignment(btnUploadFTest, Alignment.BOTTOM_LEFT);
 
-        settingsPanel.addComponent(resultDirPath);
+//        settingsPanel.addComponent(resultDirPath);
 
-        generalPanel.addComponent(listAllFailTest);
-        generalPanel.setComponentAlignment(listAllFailTest, Alignment.BOTTOM_LEFT);
+        GPanel.addComponent(listAllFailTest);
+        GPanel.setComponentAlignment(listAllFailTest, Alignment.BOTTOM_LEFT);
 
-        btnPanelListT.addComponent(btnAdd);
-        btnPanelListT.setComponentAlignment(btnAdd, Alignment.MIDDLE_CENTER);
-        btnPanelListT.addComponent(btnDel);
-        btnPanelListT.setComponentAlignment(btnAdd, Alignment.MIDDLE_CENTER);
-        generalPanel.addComponent(btnPanelListT);
-        generalPanel.setComponentAlignment(btnPanelListT, Alignment.MIDDLE_CENTER);
+        btnGTable.addComponent(btnAdd);
+        btnGTable.setComponentAlignment(btnAdd, Alignment.MIDDLE_CENTER);
+        btnGTable.addComponent(btnDel);
+        btnGTable.setComponentAlignment(btnAdd, Alignment.MIDDLE_CENTER);
+        GPanel.addComponent(btnGTable);
+        GPanel.setComponentAlignment(btnGTable, Alignment.MIDDLE_CENTER);
 
-//        generalPanel.addComponent(btnAdd);
-//        generalPanel.setComponentAlignment(btnAdd, Alignment.MIDDLE_CENTER);
+//        GPanel.addComponent(btnAdd);
+//        GPanel.setComponentAlignment(btnAdd, Alignment.MIDDLE_CENTER);
 
-        generalPanel.addComponent(listSelectFailTest);
-        generalPanel.setComponentAlignment(listSelectFailTest, Alignment.BOTTOM_RIGHT);
+        GPanel.addComponent(listSelectFailTest);
+        GPanel.setComponentAlignment(listSelectFailTest, Alignment.BOTTOM_RIGHT);
 
-//        generalPanel.addComponent(listFailTest);
-//        generalPanel.setComponentAlignment(listFailTest, Alignment.BOTTOM_LEFT);
+//        GPanel.addComponent(listFailTest);
+//        GPanel.setComponentAlignment(listFailTest, Alignment.BOTTOM_LEFT);
 
-        generalPanel.addComponent(hl);
-        generalPanel.addComponent(imageViewer);
-        generalPanel.setExpandRatio(imageViewer, 1);
-        generalPanel.setComponentAlignment(imageViewer, Alignment.BOTTOM_RIGHT);
+//        GPanel.addComponent(hl);
+        GPanel.addComponent(imageViewer);
+        GPanel.setExpandRatio(imageViewer, 1);
+        GPanel.setComponentAlignment(imageViewer, Alignment.BOTTOM_RIGHT);
         layout.addComponent(ctrls);
         layout.setComponentAlignment(ctrls, Alignment.BOTTOM_CENTER);
 
-//        generalPanel.addComponent(image);
-//        generalPanel.setComponentAlignment(image, Alignment.BOTTOM_RIGHT);
+//        GPanel.addComponent(image);
+//        GPanel.setComponentAlignment(image, Alignment.BOTTOM_RIGHT);
 
         settingsPanel.addComponent(btnChooseResultDir);
-        settingsPanel.addComponent(pathProject);
+//        settingsPanel.setComponentAlignment(btnChooseResultDir, Alignment.BOTTOM_CENTER);
+//        settingsPanel.addComponent(pathProject);
         //---------------
 
         setContent(layout);
@@ -474,6 +414,7 @@ public class TetrisUI extends UI {
         hl.setSizeUndefined();
         hl.setMargin(false);
         hl.setSpacing(true);
+        hl.setVisible(false);
 
         CheckBox c = new CheckBox("HiLite");
         c.addValueChangeListener(e -> {
@@ -590,7 +531,7 @@ public class TetrisUI extends UI {
 //            img.add(new ThemeResource("images/" + i + ".jpg"));
 //        }
         Resource res = new FileResource(
-                new File(basepath + "/rk7_logo.jpg"));
+                new File(basepath + "/rk7_logo.png"));
         img.add(res);
         return img;
     }

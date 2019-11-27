@@ -10,7 +10,7 @@ import java.io.File;
 import java.util.*;
 
 import static org.vaadin.sami.javaday.TetrisUI.*;
-import static org.vaadin.sami.rk7.Config.PREFIX_ERROR_IMG;
+import static org.vaadin.sami.rk7.Config.*;
 
 public class GetFailTestFromSystem {
     /**
@@ -18,10 +18,6 @@ public class GetFailTestFromSystem {
      * Thanks to Hovercraft Full Of Eels.
      */
     public static void showChildrenRes(String pathResult) {
-//        tree.setEnabled(false);
-//        progressBar.setVisible(true);
-//        progressBar.setIndeterminate(true);
-        System.out.println("Метод showChildrenRes");
         SwingWorker<Void, File> worker = new SwingWorker<Void, File>() {
             @Override
             public Void doInBackground() {
@@ -47,9 +43,12 @@ public class GetFailTestFromSystem {
             }
         };
         getFailDiffImg(new File(pathResult));
-//        worker.execute();
     }
 
+    /**
+     * Метод получения изображений из упавших тестов
+     * @param file - директория теста
+     */
     public static void getFailDiffImg(File file) {
 
         File root = file;
@@ -59,15 +58,22 @@ public class GetFailTestFromSystem {
             if (file.isDirectory()) {
                 Collection files = FileUtils.listFiles(root, null, recursive);
                 for (Iterator iterator = files.iterator(); iterator.hasNext(); ) {
-                    File file1 = (File) iterator.next();
-//                    System.out.println(file1.getAbsolutePath());
-//                    System.out.println(PREFIX_ERROR_IMG);
-                    if (file1.getName().contains(PREFIX_ERROR_IMG)) {
-//                        System.out.println(file1.getAbsolutePath());
-//                        System.out.println(file1.getParentFile().getParentFile().getName());
-//                        System.out.println(file1.getParentFile().getParentFile().getAbsolutePath());
-                        difImg.put(file1.getParentFile().getParentFile().getName(), file1.getAbsolutePath().trim());
-                        ERROR_TEST.put(file1.getParentFile().getParentFile().getName(), file1.getParentFile().getParentFile().getAbsolutePath());
+                    File fileDiff = (File) iterator.next();
+                    if (fileDiff.getName().contains(PREFIX_ERROR_IMG)) {
+                        Map<Integer, String> imgInTest = new HashMap<>();
+                        try {
+                            imgInTest.put(1, fileDiff.getAbsolutePath().trim());
+                            imgInTest.put(2, fileDiff.getParentFile() + "\\" + fileDiff.getName()
+                                    .replace(PREFIX_ERROR_IMG, "")
+                                    .replace(F_ERROR_EXT, F_REFERENCE_EXT));
+                            imgInTest.put(3,  fileDiff.getParentFile() + "\\" + fileDiff.getName()
+                                    .replace(PREFIX_ERROR_IMG, PREFIX_TEMPLATE_IMG));
+                        }catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        difImg.put(fileDiff.getParentFile().getParentFile().getName(), fileDiff.getAbsolutePath().trim());
+                        ERROR_TEST.put(fileDiff.getParentFile().getParentFile().getName(), fileDiff.getParentFile().getParentFile().getAbsolutePath());
+                        ALL_IMG_IN_FAIL_TEST.put(fileDiff.getParentFile().getParentFile().getName(), imgInTest);
                     }
 
                 }
@@ -79,9 +85,11 @@ public class GetFailTestFromSystem {
 //                difImg) {
 //            System.out.println(img);
 //        }
-        for (Map.Entry<String, String> img : difImg.entrySet()) {
-            System.out.println(img.getKey() + " - " + img.getValue());
+        for (Map.Entry<String, Map<Integer, String>> img : ALL_IMG_IN_FAIL_TEST.entrySet()) {
+            System.out.println("Тест: " + img.getKey() + "\n" +
+                    "Различие: " + img.getValue().get(1) + "\n" +
+                    "Скрин кассы: " + img.getValue().get(2) + "\n" +
+                    "Эталон: " + img.getValue().get(3)) ;
         }
-
     }
 }
