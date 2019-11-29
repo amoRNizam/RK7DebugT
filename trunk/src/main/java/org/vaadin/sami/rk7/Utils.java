@@ -1,8 +1,10 @@
-package org.vaadin.sami.javaday;
+package org.vaadin.sami.rk7;
 
 import com.vaadin.server.FileResource;
 import com.vaadin.server.Resource;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FileFileFilter;
+import org.vaadin.sami.javaday.DebugUI;
 import org.vaadin.sami.rk7.Config;
 
 import javax.imageio.ImageIO;
@@ -32,8 +34,26 @@ public class Utils {
         return properties;
     }
 
+    public static String getProjectPath() {
+        String CurrentProjectPath = null;
+
+        switch (SELECTED_PROJECT_DIR) {
+            case ("msk"):
+                CurrentProjectPath = PATH_PROJECT_MSK;
+                break;
+            case ("msk-sea"):
+                CurrentProjectPath = PATH_PROJECT_MSK;
+                break;
+            case ("vrn"):
+                CurrentProjectPath = PATH_PROJECT_MSK;
+                break;
+        }
+        return CurrentProjectPath;
+    }
+
     /**
      * Метод замены скриншотов
+     *
      * @throws IOException
      */
     public static void reReference() throws IOException {
@@ -42,7 +62,7 @@ public class Utils {
 
             String erImg = img.getValue().substring(img.getValue().lastIndexOf("\\") + 1).trim();
             // Эталон в проекте (что заменяем)
-            File from = new File(String.format(PATH_PROJECT + "\\%s\\%s", img.getKey(), erImg
+            File from = new File(String.format(getProjectPath() + "\\%s\\%s", img.getKey(), erImg
                     .replace(Config.PREFIX_ERROR_IMG, "").trim()
                     .replace(Config.F_ERROR_EXT, Config.F_REFERENCE_EXT)));
 
@@ -54,13 +74,41 @@ public class Utils {
             FileChannel destChannel = null;
 
             try {
-                sourceChannel = new FileInputStream(to).getChannel(); // чем заменяем
-                destChannel = new FileOutputStream(from).getChannel(); // что заменяем
+                try {
+                    sourceChannel = new FileInputStream(to).getChannel(); // чем заменяем
+                } catch (FileNotFoundException e) {
+                    String oldLog = log.getValue();
+                    log.setValue(oldLog
+                            + "<p><b>ERROR </b>[<ins>"
+                            + img.getKey().trim() + "</ins>] - " + e + "</p>");
+                }
+                try {
+                    destChannel = new FileOutputStream(from).getChannel(); // что заменяем3
+                } catch (FileNotFoundException e) {
+                    String oldLog = log.getValue();
+                    log.setValue(oldLog
+                            + "<p><b>ERROR </b>[<ins>"
+                            + img.getKey().trim() + "</ins>] - " + e + "</p>");
+                }
 
                 destChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
+                String oldLog = log.getValue();
+                log.setValue(oldLog
+                        + "<p><b>OK </b>[<ins>"
+                        + img.getKey().trim() + "</ins>] - " + from.getAbsolutePath().trim() + "</p>");
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
+                String oldLog = log.getValue();
+                log.setValue(oldLog
+                        + "<p><b>ERROR </b>[<ins>"
+                        + img.getKey().trim() + "</ins>] - " + to.getAbsolutePath().trim() + "</p>");
             } catch (IOException e) {
+                e.printStackTrace();
+                String oldLog = log.getValue();
+                log.setValue(oldLog
+                        + "<p><b>ERROR </b>[<ins>"
+                        + img.getKey().trim() + "</ins>] - " + to.getAbsolutePath().trim() + "</p>");
+            } catch (NullPointerException e) {
                 e.printStackTrace();
             } finally {
                 if (sourceChannel != null) {
@@ -75,6 +123,7 @@ public class Utils {
 
     /**
      * Удаление всех файлов в директории
+     *
      * @param path - путь к директории
      */
     public static void deleteAllFilesFolder(String path) {
@@ -82,7 +131,7 @@ public class Utils {
             File folder = new File(path);
             for (File myFile : folder.listFiles())
                 if (myFile.isFile()) myFile.delete();
-        }catch (NullPointerException e) {
+        } catch (NullPointerException e) {
             e.printStackTrace();
         }
     }
@@ -145,39 +194,31 @@ public class Utils {
 
     public static Set<String> getResultDir() {
         LIST_RESULT_DIR.clear();
-        System.out.println(PATH_RESULT);
         File file = new File(PATH_RESULT);
-        File root = file;
-        System.out.println(file.getAbsolutePath());
-        try {
-            boolean recursive = true;
-
-            if (file.isDirectory()) {
-                System.out.println("1*******");
-                Collection files = FileUtils.listFiles(root, null, recursive);
-                for (Iterator iterator = files.iterator(); iterator.hasNext(); ) {
-                    System.out.println("2*******");
-                    File dirResult = (File) iterator.next();
-                    if (dirResult.getName().contains(PREFIX_RESULT_DIR)) {
-                        System.out.println("3*******");
-                        System.out.println(dirResult);
-                        LIST_RESULT_DIR.add(dirResult.getName());
-                    }
-                }
+        String[] directories = file.list(new FilenameFilter() {
+            //        String[] directories = file.list(new FileFileFilter() {
+            @Override
+            public boolean accept(File current, String name) {
+                return new File(current, name).isDirectory();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-//        for (String img :
-//                difImg) {
-//            System.out.println(img);
-//        }
-//        for (Map.Entry<String, Map<Integer, String>> img : ALL_IMG_IN_FAIL_TEST.entrySet()) {
-//            System.out.println("Тест: " + img.getKey() + "\n" +
-//                    "Различие: " + img.getValue().get(1) + "\n" +
-//                    "Скрин кассы: " + img.getValue().get(2) + "\n" +
-//                    "Эталон: " + img.getValue().get(3)) ;
-//        }
+        });
+        List<String> arrayList = new ArrayList<>();
+        arrayList.addAll(Arrays.asList(directories));
+        arrayList.forEach(x -> {
+            if (x.contains(PREFIX_RESULT_DIR)) {
+                LIST_RESULT_DIR.add(PATH_RESULT + x);
+            }
+            ;
+        });
+
+        LIST_RESULT_DIR.forEach(x -> {
+            System.out.println(x);
+            ;
+        });
         return LIST_RESULT_DIR;
+    }
+
+    public static void refreshLog() {
+        log.setValue("<p style = 'color:green;'>log</p>");
     }
 }

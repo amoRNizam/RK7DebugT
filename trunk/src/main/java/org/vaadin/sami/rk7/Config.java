@@ -1,7 +1,5 @@
 package org.vaadin.sami.rk7;
 
-import org.vaadin.sami.javaday.Utils;
-
 public class Config {
     public static String PREFIX_ERROR_IMG;
     public static String PREFIX_TEMPLATE_IMG;
@@ -10,6 +8,9 @@ public class Config {
     public static String F_REFERENCE_EXT;
     public static String PATH_RESULT;
     public static String PATH_PROJECT;
+    public static String PATH_PROJECT_MSK;
+    public static String PATH_PROJECT_MSK_SEA;
+    public static String PATH_PROJECT_VRN;
 
     public Config() {
         PREFIX_ERROR_IMG = Utils.getProperty().get("prefixErDiffImg");
@@ -19,5 +20,8 @@ public class Config {
         F_REFERENCE_EXT = Utils.getProperty().get("referenceFileExtension");
         PATH_RESULT = Utils.getProperty().get("pathResult");
         PATH_PROJECT = Utils.getProperty().get("pathProject");
+        PATH_PROJECT_MSK = Utils.getProperty().get("pathProjectMSK");
+        PATH_PROJECT_MSK_SEA = Utils.getProperty().get("pathProjectMSK_SEA");
+        PATH_PROJECT_VRN = Utils.getProperty().get("pathProjectVRN");
     }
 }

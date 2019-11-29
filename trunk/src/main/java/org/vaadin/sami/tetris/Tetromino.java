@@ -1,14 +1,5 @@
 package org.vaadin.sami.tetris;
 
-/**
- * Tetriminoes class.
- * 
- * Based on the Tetris Guidelines at
- * http://tetris.wikia.com/wiki/Tetris_Guideline.
- * 
- * @author Sami Ekblad / Vaadin
- * 
- */
 public class Tetromino extends Grid {
 
 	private static String LABELS = "IJLOSTZ";

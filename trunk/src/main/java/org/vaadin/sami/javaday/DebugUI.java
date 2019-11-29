@@ -29,11 +29,10 @@ import org.vaadin.viritin.button.PrimaryButton;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import static org.vaadin.sami.javaday.Utils.*;
+import static org.vaadin.sami.rk7.Utils.*;
 import static org.vaadin.sami.rk7.GetFailTestFromSystem.showChildrenRes;
 
 @Push
@@ -63,7 +62,6 @@ public class DebugUI extends UI {
     private static final String PLAYFIELD_COLOR = "#000";
 
     private VerticalLayout layout;
-    private VerticalLayout imageLayout;
     private Canvas canvas;
     protected boolean running;
     protected Game game;
@@ -73,18 +71,21 @@ public class DebugUI extends UI {
     //---------RK7---------
     public static FileSystemView fileSystemView;
     public static ArrayList<File> listFile = new ArrayList<>();
-    public static TextField resultDirPath;
     public static Map<String, String> difImg = new HashMap<>();
     public static Map<String, String> ERROR_DIFF_IMG = new HashMap<>();
     public static Map<String, String> ERROR_TEST = new HashMap<>();
     public static Map<String, Map<Integer, String>> ALL_IMG_IN_FAIL_TEST = new HashMap<>();
     public static Set<String> eList = new LinkedHashSet<>();
     public static Set<String> LIST_RESULT_DIR = new LinkedHashSet<>();
+    public static List<String> LIST_PROJECT_DIR = new ArrayList<>();
+    public static String SELECTED_RESULT_DIR = null;
+    public static String SELECTED_PROJECT_DIR = null;
 
-    public static TextField pathProject;
+    public static Label log;
     private static ImageViewer imageViewer;
     private TextField selectedImage = new TextField();
     public static NativeSelect inputDirResult;
+    public static NativeSelect inputDirProject;
 
     public static String SELECTED_ER_T_IN_ALL;
     public static String SELECTED_ER_T_IN_SEL;
@@ -98,9 +99,19 @@ public class DebugUI extends UI {
 
     @Override
     protected void init(VaadinRequest request) {
-        // Find the application directory
-        // Инициализируем конфиги
-        new Config();
+        new Config(); // Инициализируем конфиги
+
+        // Очищаем все коллекции
+        listFile.clear();
+        difImg.clear();
+        ERROR_DIFF_IMG.clear();
+        ERROR_TEST.clear();
+        ALL_IMG_IN_FAIL_TEST.clear();
+        eList.clear();
+        LIST_RESULT_DIR.clear();
+        LIST_PROJECT_DIR.clear();
+
+        getResultDir(); // Заполняем список директорий результатов тестов
 
         layout = new VerticalLayout();
         layout.setSizeUndefined();
@@ -110,20 +121,17 @@ public class DebugUI extends UI {
 
         layout.addComponent(new About()); // о программе
 
-        //*** RK7 *****************************************************************
         //--- РАСПОЛОЖЕНИЕ (панель кнопок главной таблицы)
         VerticalLayout btnGTable = new VerticalLayout();
         btnGTable.addStyleName("outlined");
         btnGTable.setSpacing(false);
         btnGTable.setMargin(false);
-//        btnGTable.setSizeFull();
 
         //--- РАСПОЛОЖЕНИЕ (панель настроек)
         HorizontalLayout settingsPanel = new HorizontalLayout();
         settingsPanel.addStyleName("outlined");
         settingsPanel.setSpacing(true);
         settingsPanel.setMargin(false);
-//        settingsPanel.setSizeFull();
 
         //--- РАСПОЛОЖЕНИЕ (вертикальная панель)
         HorizontalLayout GPanel = new HorizontalLayout();
@@ -131,7 +139,6 @@ public class DebugUI extends UI {
         GPanel.setSpacing(true);
         GPanel.addStyleName("outlined");
         GPanel.setHeight(100.0f, Unit.PERCENTAGE);
-//        layout.setComponentAlignment(GPanel, Alignment.BOTTOM_RIGHT);
 
         //*********************ИЗОБРАЖЕНИЯ ******************************
         // Просмотрщик изображений
@@ -148,56 +155,32 @@ public class DebugUI extends UI {
             selectedImage.setValue(e.getSelectedImageIndex() >= 0 ? String.valueOf(e.getSelectedImageIndex()) : "-");
         });
 
+        // информация к просмотрщику
         Label info = new Label("<div style = 'margin: -45px 0px 45px 100px;'><i>*от&nbsp;</i>"
-                        + "<b>difference_scr</b>"
-                        + "&nbsp;<u>слева эталон</u> с проекта, а <u>справа скрин</u> с кассы.</div>",
+                + "<b>difference_scr</b>"
+                + "&nbsp;<u>слева эталон</u> с проекта, а <u>справа скрин</u> с кассы.</div>",
                 ContentMode.HTML);
         info.setVisible(false);
-//        info.setValue("* слева от difference_scr находится эталон с проекта, а справа скрин с кассы");
 
-//        HorizontalLayout hl = new HorizontalLayout();
-//        hl.setSizeUndefined();
-//        hl.setMargin(false);
-//        hl.setSpacing(true);
-//        hl.addComponent(info);
-//        GPanel.addComponent(hl);
-//        GPanel.addComponent(imageViewer);
-//        GPanel.setExpandRatio(imageViewer, 1);
-//        GPanel.setComponentAlignment(imageViewer, Alignment.BOTTOM_RIGHT);
-//        layout.addComponent(hl);
-//        layout.addComponent(imageViewer);
-//        layout.setExpandRatio(imageViewer, 1);
-//
         // Панель управления для просмотрщика
         Layout ctrls = createControls();
-//        layout.addComponent(ctrls);
-//        layout.setComponentAlignment(ctrls, Alignment.BOTTOM_CENTER);
-
-//        Label images = new Label("");
-//        images.setSizeUndefined();
-//        images.setStyleName("licence");
-//        layout.addComponent(images);
-//        layout.setComponentAlignment(images, Alignment.BOTTOM_RIGHT);
 
         setContent(layout);
         try {
             imageViewer.setCenterImageIndex(0);
-        }catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         imageViewer.focus();
-
-//        GPanel.addComponent(image);
-//        GPanel.setComponentAlignment(image, Alignment.BOTTOM_RIGHT);
 
         // Левая таблица павших тестов (все павшие тесты)
         ListSelect listAllFailTest = new ListSelect<>("Все упавшие тесты");
         listAllFailTest.setRows(6);
-//        listAllFailTest.setWidth(100.0f, Unit.PERCENTAGE);
         listAllFailTest.setWidth("170");
         listAllFailTest.setHeight("525");
 
         listAllFailTest.addValueChangeListener(event -> {
             SELECTED_ER_T_IN_ALL = event.getValue().toString()
-                    .replace("[","").replace("]","");
+                    .replace("[", "").replace("]", "");
 
             selectDeffImg = new FileResource(new File(difImg.get(SELECTED_ER_T_IN_ALL.trim())));
             deleteAllFilesFolder(basepath + "/WEB-INF/images/view"); //очистим папку с изображениями
@@ -209,99 +192,146 @@ public class DebugUI extends UI {
         listAllFailTest.setRows(6);
         listSelectFailTest.setWidth("170");
         listSelectFailTest.setHeight("525");
-//        GPanel.addComponent(listSelectFailTest);
-//        GPanel.setComponentAlignment(listSelectFailTest, Alignment.BOTTOM_RIGHT);
         //--------------------------------------------
         listSelectFailTest.addValueChangeListener(event -> {
             SELECTED_ER_T_IN_SEL = event.getValue().toString()
-                    .replace("[","").replace("]","");
+                    .replace("[", "").replace("]", "");
         });
 
         fileSystemView = FileSystemView.getFileSystemView();
 
-        TwinColSelect<String> listFailTest = new TwinColSelect<>();
-        listFailTest.setWidth("170");
-        listFailTest.setHeight("525");
-//        showChildrenRes("D:\\TestingResult_19.11.2019_01.03.56");
-        listFailTest.setRightColumnCaption("Для отладки");
-        listFailTest.setLeftColumnCaption("Все упавшие тесты");
-
         // КНОПКИ
+        // кнопка Загрузить fail-тесты
         Button btnUploadFTest = new Button("Загрузить fail-тесты");
         btnUploadFTest.addClickListener(event -> {
-            listAllFailTest.clear();
-            showChildrenRes("D:\\TestingResult_19.11.2019_01.03.56");
-            // запоним список fail-тетсов
-            ArrayList<String> s = new ArrayList<>();
-
             try {
-                for (Map.Entry<String, String> fTest : ERROR_TEST.entrySet()) {
-                    s.add(fTest.getKey());
+                listAllFailTest.clear();
+            }catch (Exception ignored) {}
+            refreshLog();
+            if (SELECTED_RESULT_DIR != null) {
+                showChildrenRes(SELECTED_RESULT_DIR);
+                // запоним список fail-тетсов
+                ArrayList<String> s = new ArrayList<>();
+
+                try {
+                    for (Map.Entry<String, String> fTest : ERROR_TEST.entrySet()) {
+                        s.add(fTest.getKey());
+                    }
+                    listAllFailTest.setItems(s);
+                    Notification.show("Загрузка успешно завершена!", Type.TRAY_NOTIFICATION);
+                } catch (Exception e) {
+                    Notification.show("Произошла ошибка! \n" + e, Type.ERROR_MESSAGE);
                 }
-                listAllFailTest.setItems(s);
-                Notification.show("Загрузка успешно завершена!", Type.TRAY_NOTIFICATION);
-            }catch (Exception e) {
-                Notification.show("Произошла ошибка! \n" +e, Type.ERROR_MESSAGE);
+                info.setVisible(true);
+            } else {
+                Notification.show("Не выбрана директория результатов прогона!", Type.ERROR_MESSAGE);
             }
-            info.setVisible(true);
         });
 
+        // Кнопка ЗАМЕНИТЬ
         Button btnChooseResultDir = new Button("ЗАМЕНИТЬ");
         btnChooseResultDir.setStyleName(ValoTheme.BUTTON_DANGER);
         btnChooseResultDir.addClickListener(event -> {
-            // Здесь будет действие замены скринов
+            refreshLog();
+            if (ERROR_DIFF_IMG.size() >= 1
+                    && SELECTED_RESULT_DIR != null
+                    && SELECTED_PROJECT_DIR != null) {
+                try {
+                    reReference();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                Notification notification = new Notification("Не все поля заполнены!",
+                        "");
+                notification.show(Page.getCurrent());
+            }
         });
 
+        // Кнопка >
         Button btnAdd = new Button(">");
         btnAdd.setIconAlternateText(">");
 
         btnAdd.addClickListener(event -> {
-            Notification.show("The button was clicked", Type.TRAY_NOTIFICATION);
             eList.add(SELECTED_ER_T_IN_ALL);
             listSelectFailTest.setItems(eList);
+            ERROR_DIFF_IMG.put(SELECTED_ER_T_IN_ALL, difImg.get(SELECTED_ER_T_IN_ALL));
         });
+
+        // Кнопка <
         Button btnDel = new Button("<");
         btnDel.setIconAlternateText("<");
 
         btnDel.addClickListener(event -> {
-            Notification.show("The button was clicked", Type.TRAY_NOTIFICATION);
             eList.remove(SELECTED_ER_T_IN_SEL);
+            ERROR_DIFF_IMG.remove(SELECTED_ER_T_IN_SEL);
             listSelectFailTest.setItems(eList);
         });
 
-        //-##########################################################################
-
         // ПОЛЯ
-//        resultDirPath = new TextField();
-//        resultDirPath.setPlaceholder("Write something");
-//        resultDirPath.setMaxLength(10);
 
-//        pathProject = new TextField();
-//        pathProject.setPlaceholder("Укажите путь к папке 'input' в проекте");
-//        pathProject.setWidth("350");
-//        pathProject.setMaxLength(15);
-        List<String> data = IntStream.range(0, 6).mapToObj(i -> "Option " + i).collect(Collectors.toList());
+        // Лог выполнения замены
+        log = new Label();
+        log.setWidth("700");
+        log.setContentMode(ContentMode.HTML);
+        refreshLog();
+
+        // Поле выбора директории результатов прогона
         inputDirResult = new NativeSelect<>();
-//        inputDirResult.setData(getResultDir());
-        //https://javadevblog.com/java-filenamefilter-primer-spiska-fajlov-s-opredelenny-m-rasshireniem.html ЗДЕСЬ ПОСМОТРЕТЬ РЕАЛИЗАЦИЮ.
-
+        inputDirResult.clear();
+        inputDirResult.setItems(LIST_RESULT_DIR);
         inputDirResult.setEmptySelectionAllowed(false);
-        inputDirResult.setSelectedItem(data.get(2));
-        inputDirResult.addValueChangeListener(event -> Notification.show("Value changed:",
-                String.valueOf(event.getValue()),
-                Type.TRAY_NOTIFICATION));
+        inputDirResult.setDescription("Директория результатов тестового прогона");
 
+        inputDirResult.addValueChangeListener(event -> {
+            Notification.show("Выбрано:",
+                    String.valueOf(event.getValue()),
+                    Type.TRAY_NOTIFICATION);
+            try {
+                SELECTED_RESULT_DIR = event.getValue().toString();
+            } catch (NullPointerException e) {
+                SELECTED_RESULT_DIR = null;
+            }
+        });
 
+        // Поле выбора проекта
+        inputDirProject = new NativeSelect<>();
+        inputDirProject.clear();
+        LIST_PROJECT_DIR.clear();
+        // Данные
+        LIST_PROJECT_DIR.add("msk");
+        LIST_PROJECT_DIR.add("msk-sea");
+        LIST_PROJECT_DIR.add("vrn");
+        inputDirProject.setItems(LIST_PROJECT_DIR);
+        inputDirProject.setEmptySelectionAllowed(false);
+        inputDirProject.setDescription("Директория эталонов для тестов в проекте");
+
+        inputDirProject.addValueChangeListener(event -> {
+            Notification.show("Выбрано:",
+                    String.valueOf(event.getValue()),
+                    Type.TRAY_NOTIFICATION);
+            try {
+                SELECTED_PROJECT_DIR = event.getValue().toString();
+            } catch (NullPointerException e) {
+                SELECTED_PROJECT_DIR = null;
+            }
+        });
+
+        // Разделитель между кнопкой "Загрузить.." и выбором директории проекта
+        Image image = new Image();
+        Resource resource = new FileResource(new File(basepath + "/burger.png"));
+        image.setWidth("30");
+        image.setSource(resource);
 
         /// ПОСТРОЕНИЕ ИНТЕРФЕЙСА (РАСПОЛОЖЕНИЕ ЭЕЛЕМЕНТОВ)
 
         layout.addComponent(settingsPanel);
         layout.addComponent(GPanel);
 
+        settingsPanel.addComponent(inputDirResult);
+
         settingsPanel.addComponent(btnUploadFTest); // кнопка Загрузить fail-тесты
         settingsPanel.setComponentAlignment(btnUploadFTest, Alignment.BOTTOM_LEFT);
-
-        settingsPanel.addComponent(inputDirResult);
 
         GPanel.addComponent(listAllFailTest);
         GPanel.setComponentAlignment(listAllFailTest, Alignment.BOTTOM_LEFT);
@@ -313,16 +343,9 @@ public class DebugUI extends UI {
         GPanel.addComponent(btnGTable);
         GPanel.setComponentAlignment(btnGTable, Alignment.MIDDLE_CENTER);
 
-//        GPanel.addComponent(btnAdd);
-//        GPanel.setComponentAlignment(btnAdd, Alignment.MIDDLE_CENTER);
-
         GPanel.addComponent(listSelectFailTest);
         GPanel.setComponentAlignment(listSelectFailTest, Alignment.BOTTOM_RIGHT);
 
-//        GPanel.addComponent(listFailTest);
-//        GPanel.setComponentAlignment(listFailTest, Alignment.BOTTOM_LEFT);
-
-//        GPanel.addComponent(hl);
         GPanel.addComponent(imageViewer);
         GPanel.setExpandRatio(imageViewer, 1);
         GPanel.setComponentAlignment(imageViewer, Alignment.BOTTOM_RIGHT);
@@ -331,13 +354,11 @@ public class DebugUI extends UI {
         layout.addComponent(ctrls);
         layout.setComponentAlignment(ctrls, Alignment.BOTTOM_CENTER);
 
-//        GPanel.addComponent(image);
-//        GPanel.setComponentAlignment(image, Alignment.BOTTOM_RIGHT);
-
+        settingsPanel.addComponents(image);
+        settingsPanel.addComponents(inputDirProject);
         settingsPanel.addComponent(btnChooseResultDir);
-//        settingsPanel.setComponentAlignment(btnChooseResultDir, Alignment.BOTTOM_CENTER);
-//        settingsPanel.addComponent(pathProject);
-        //---------------
+
+        layout.addComponent(log);
 
         setContent(layout);
 
@@ -412,7 +433,7 @@ public class DebugUI extends UI {
         layout.addComponent(canvas);
         canvas.setWidth((TILE_SIZE * PLAYFIELD_W) + "px");
         canvas.setHeight((TILE_SIZE * PLAYFIELD_H) + "px");
-		// canvas.setBackgroundColor(PLAYFIELD_COLOR);
+        // canvas.setBackgroundColor(PLAYFIELD_COLOR);
 
         // Label for score
         scoreLabel = new Label("");
@@ -634,5 +655,4 @@ public class DebugUI extends UI {
             }
         });
     }
-
 }

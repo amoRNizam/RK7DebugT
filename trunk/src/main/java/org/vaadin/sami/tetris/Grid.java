@@ -1,11 +1,5 @@
 package org.vaadin.sami.tetris;
 
-/**
- * Generic grid for integer values and operations.
- * 
- * @author Sami Ekblad / Vaadin
- * 
- */
 public class Grid {
 
 	private static final int EMPTY_VALUE = 0;

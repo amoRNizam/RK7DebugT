@@ -1,16 +1,5 @@
 package org.vaadin.sami.tetris;
 
-/**
- * Tetis game class.
- * 
- * This class implements the game control and bookkeeping methods.
- * 
- * Based on the Tetris Guidelines at
- * http://tetris.wikia.com/wiki/Tetris_Guideline.
- * 
- * @author Sami Ekblad / Vaadin
- * 
- */
 public class Game {
 
 	private Grid playfield;

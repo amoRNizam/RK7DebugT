@@ -10,10 +10,7 @@ import static org.vaadin.sami.javaday.DebugUI.*;
 import static org.vaadin.sami.rk7.Config.*;
 
 public class GetFailTestFromSystem {
-    /**
-     * Add the files that are contained within the directory of this node.
-     * Thanks to Hovercraft Full Of Eels.
-     */
+
     public static void showChildrenRes(String pathResult) {
         SwingWorker<Void, File> worker = new SwingWorker<Void, File>() {
             @Override
@@ -78,15 +75,12 @@ public class GetFailTestFromSystem {
         } catch (Exception e) {
             e.printStackTrace();
         }
-//        for (String img :
-//                difImg) {
-//            System.out.println(img);
+
+//        for (Map.Entry<String, Map<Integer, String>> img : ALL_IMG_IN_FAIL_TEST.entrySet()) {
+//            System.out.println("Тест: " + img.getKey() + "\n" +
+//                    "Различие: " + img.getValue().get(1) + "\n" +
+//                    "Скрин кассы: " + img.getValue().get(2) + "\n" +
+//                    "Эталон: " + img.getValue().get(3)) ;
 //        }
-        for (Map.Entry<String, Map<Integer, String>> img : ALL_IMG_IN_FAIL_TEST.entrySet()) {
-            System.out.println("Тест: " + img.getKey() + "\n" +
-                    "Различие: " + img.getValue().get(1) + "\n" +
-                    "Скрин кассы: " + img.getValue().get(2) + "\n" +
-                    "Эталон: " + img.getValue().get(3)) ;
-        }
     }
 }
